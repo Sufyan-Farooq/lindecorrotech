@@ -202,6 +202,6 @@ Ease `cubic-bezier(.16,1,.3,1)`. Word rise 1s with 55ms stagger; block rise 26px
 
 - **Do** show only true numbers: licence 63/00063222, CR 7052479644, VAT 314382023100003, 13 regions. **Don't** invent fleet sizes, clients, reviews or prices.
 - **Do** describe only containers and flatbeds. **Don't** list reefer, curtainside, rental or cross-border until they're offered.
-- **Do** credit every found photograph in the footer and caption what it shows. **Don't** present a found photo as our own truck, yard or team.
+- **Do** credit every found photograph on `credits.html` (linked from the footer © line) and caption what it shows. **Don't** present a found photo as our own truck, yard or team.
 - **Don't** add eyebrow labels above headings, gradient fills, glass, drop shadows, or a second accent colour.
 - **Don't** put white body text on Sky Blue.

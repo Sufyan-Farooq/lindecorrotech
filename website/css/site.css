@@ -342,8 +342,8 @@ html[lang="ar"] .faq-head h2 { line-height: 1.25; }
 .foot nav a:hover { text-decoration: underline; }
 .foot-reg p { font-variant-numeric: tabular-nums; }
 .foot-reg span { color: #fff; }
-.credits { margin-top: 48px; max-width: 80em; line-height: 1.6; }
-.credits a { color: #c9d2db; }
+.copy-line a { color: var(--on-ink-2); }
+.copy-line a:hover { color: #fff; }
 .copy-line { margin-top: 18px; }
 
 /* ---------- motion layer (only with JS, never with reduced motion) ---------- */
