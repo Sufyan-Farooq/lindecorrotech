@@ -1,0 +1,15 @@
+# Client brand files, documents and working material never go in this public repo
+/1 Logo/
+/2 Stationery/
+/_Working files/
+*.zip
+PRODUCT.md
+.impeccable/
+.taste-skill/
+.claude/
+website-comparison/
+
+# Build output (GitHub Actions builds it) and photo originals (the site uses the .webp copies)
+_site/
+website/assets/*.jpg
+website/assets/credits.json
