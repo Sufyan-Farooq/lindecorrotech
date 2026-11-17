@@ -149,7 +149,7 @@
   /* ---------------- smooth scroll ---------------- */
   var lenis = null;
   if (!RM && W.Lenis && W.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    lenis = new W.Lenis({ lerp: 0.11, wheelMultiplier: 1 });
+    lenis = new W.Lenis({ lerp: 0.16, wheelMultiplier: 1 }); // smooth, but close behind the wheel
     (function raf(time) { lenis.raf(time); requestAnimationFrame(raf); })(performance.now());
     if (H.classList.contains('intro-on')) lenis.stop();
   }
@@ -398,6 +398,30 @@
     fillCities(); plan(false); buildTicker(); onScroll();
   }
   // each language is its own pre-rendered page (/ and /ar/); setLang is kept for tooling
+
+  /* ---------------- light / dark ----------------
+     Follows the system until the visitor picks one; picking the same as the system goes back to following it. */
+  var themeBtn = $('[data-theme-toggle]');
+  var sysDark = W.matchMedia ? W.matchMedia('(prefers-color-scheme: dark)') : null;
+  function saved() { try { return localStorage.getItem('lc-theme'); } catch (e) { return null; } }
+  function applyTheme(t) {
+    H.setAttribute('data-theme', t);
+    if (themeBtn) themeBtn.setAttribute('aria-label', t === 'dark'
+      ? (lang() === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to light mode')
+      : (lang() === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to dark mode'));
+    onScroll();
+  }
+  if (themeBtn) themeBtn.addEventListener('click', function () {
+    var next = H.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    var sys = sysDark && sysDark.matches ? 'dark' : 'light';
+    try { if (next === sys) localStorage.removeItem('lc-theme'); else localStorage.setItem('lc-theme', next); } catch (e) {}
+    applyTheme(next);
+  });
+  if (sysDark) {
+    var follow = function (e) { if (!saved()) applyTheme(e.matches ? 'dark' : 'light'); };
+    if (sysDark.addEventListener) sysDark.addEventListener('change', follow); else if (sysDark.addListener) sysDark.addListener(follow);
+  }
+  applyTheme(H.getAttribute('data-theme') || 'light');
 
   /* ---------------- go ---------------- */
   onScroll();

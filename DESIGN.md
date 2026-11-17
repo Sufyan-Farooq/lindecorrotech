@@ -145,6 +145,9 @@ Motion is part of the identity, not decoration. On the first visit an intro draw
 - **Secondary text**: `#A9B4C0` on ink, `#4A5562` on white. Running text is always the full ink, or `#D5DCE4` for long ledes on Route Black.
 - **Map greys** (planner map only): land `#262D37`, the Kingdom `#2B3542`, towns `#8995A3`.
 
+### Dark mode
+Follows the visitor's system setting; the header sun/moon button overrides it, and the choice is saved (picking the system's own mode goes back to following it). Only the white sections change: `--paper` `#181D24`, `--paper-2` `#20262E`, `--paper-3` `#2C343E`, text `#EEF2F6` / `#A9B4C0`, links `#4CB0FF`, the selected segment turns Sky Blue. Route Black sections, the blue ticker and the blue quote section stay as they are, so the dark/light rhythm survives in both modes.
+
 ### Named Rules
 - **One accent.** Nothing else is coloured. No red, no green, no gradients.
 - **Fields, not borders.** Surfaces separate by a tone step and a 3px gap of the field behind, never by hairlines or shadows.

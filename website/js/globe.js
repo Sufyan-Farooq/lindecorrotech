@@ -18,23 +18,32 @@
   var sphere = { type: 'Sphere' };
   var graticule = d3.geoGraticule10();
 
-  /* land as dots: rasterise the land once into an equirectangular mask, sample a grid */
-  var dots = (function () {
+  /* land as dots. The land is rasterised once into an equirectangular mask and sampled on a grid.
+     Two sets keep each frame cheap: a coarse grid for the whole planet (seen only while zoomed out)
+     and a fine grid around Arabia (the zoomed-in view). Each dot keeps cos/sin of its latitude
+     and its longitude in radians, so a frame costs two trig calls per dot. */
+  var RAD = Math.PI / 180;
+  var landMask = (function () {
     var W = 720, Hh = 360, c = document.createElement('canvas');
     c.width = W; c.height = Hh;
     var x = c.getContext('2d', { willReadFrequently: true });
     var pr = d3.geoEquirectangular().fitSize([W, Hh], sphere);
     x.fillStyle = '#000'; x.beginPath(); d3.geoPath(pr, x)({ type: 'FeatureCollection', features: countries }); x.fill();
-    var img = x.getImageData(0, 0, W, Hh).data, out = [], step = 0.62;
-    for (var lat = -84; lat <= 84; lat += step) {
-      var s = step / Math.max(0.25, Math.cos(lat * Math.PI / 180));
-      for (var lon = -180; lon < 180; lon += s) {
-        var p = pr([lon, lat]), i = ((p[1] | 0) * W + (p[0] | 0)) * 4 + 3;
-        if (img[i] > 0) out.push([lon, lat]);
+    var img = x.getImageData(0, 0, W, Hh).data;
+    return function (lon, lat) { var p = pr([lon, lat]); return img[((p[1] | 0) * W + (p[0] | 0)) * 4 + 3] > 0; };
+  })();
+  function sample(lon0, lon1, lat0, lat1, step) {
+    var out = [];
+    for (var lat = lat0; lat <= lat1; lat += step) {
+      var s = step / Math.max(0.25, Math.cos(lat * RAD));
+      for (var lon = lon0; lon < lon1; lon += s) {
+        if (landMask(lon, lat)) out.push(Math.cos(lat * RAD), Math.sin(lat * RAD), lon * RAD);
       }
     }
-    return out;
-  })();
+    return new Float32Array(out);
+  }
+  var dotsWorld = sample(-180, 180, -84, 84, 1.9);
+  var dotsNear = sample(14, 82, -4, 50, 0.62);
 
   /* routes */
   var routes = DATA.cities.map(function (c, k) {
@@ -59,7 +68,7 @@
 
   function size() {
     var r = cv.parentNode.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     w = Math.max(10, r.width); h = Math.max(10, r.height);
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     cv.style.width = w + 'px'; cv.style.height = h + 'px';
@@ -87,22 +96,33 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    // sphere: same ink as the page, so only its rim, graticule and land show
-    ctx.beginPath(); path(sphere); ctx.fillStyle = INK; ctx.fill();
+    // sphere rim (fades out as we dive in); the frame fades to the page at its edges,
+    // drawn here rather than with a CSS mask so the browser doesn't re-composite a mask every frame
+    var fadeR = Math.min(w, h) / 2;
+    ctx.beginPath(); path(sphere);
     ctx.strokeStyle = 'rgba(255,255,255,' + (0.16 * (1 - zoom)).toFixed(3) + ')'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, fadeR, 0, Math.PI * 2); ctx.clip();
     ctx.beginPath(); path(graticule); ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1; ctx.stroke();
-
-    // land dots
-    ctx.fillStyle = 'rgba(203,214,226,0.34)';
-    var ds = Math.max(1.1, Math.min(2.6, R / 420));
-    for (var i = 0; i < dots.length; i++) {
-      var d = dots[i];
-      if (!facing(d)) continue;
-      var p = proj(d);
-      ctx.fillRect(p[0] - ds / 2, p[1] - ds / 2, ds, ds);
-    }
-    // borders, faint
     ctx.beginPath(); path(borders); ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.restore();
+
+    // land dots, batched into four brightness bands by distance from the centre
+    var set = zoom > 0.45 ? dotsNear : dotsWorld;
+    var lam = rot[0] * RAD, cp = Math.cos(rot[1] * RAD), sp = Math.sin(rot[1] * RAD);
+    var ds = Math.max(1.1, Math.min(2.6, R / 420)), hd = ds / 2, f2 = fadeR * fadeR;
+    var bands = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+    for (var i = 0; i < set.length; i += 3) {
+      var cl = set[i], sl = set[i + 1], a = set[i + 2] + lam;
+      var x = cl * Math.cos(a);
+      if (x * cp - sl * sp < 0.03) continue;            // on the far side
+      var X = cx + R * cl * Math.sin(a), Y = cy - R * (sl * cp + x * sp);
+      var dx = X - cx, dy = Y - cy, d2 = (dx * dx + dy * dy) / f2;
+      if (d2 >= 1) continue;                            // outside the round frame
+      bands[d2 < 0.49 ? 0 : d2 < 0.64 ? 1 : d2 < 0.81 ? 2 : 3].rect(X - hd, Y - hd, ds, ds);
+    }
+    var BA = [0.34, 0.24, 0.14, 0.06];
+    for (var b = 0; b < 4; b++) { ctx.fillStyle = 'rgba(203,214,226,' + BA[b] + ')'; ctx.fill(bands[b]); }
 
     // the Kingdom
     var intro = ease((t - 1.6) / 1.0);
@@ -204,9 +224,12 @@
       }
     }
     rot[1] = Math.max(-60, Math.min(30, rot[1]));
-    draw(now);
+    // while the page is being scrolled, give the frame to the scroll (the opening dive always plays)
+    if (drag || t < SPIN + 1.5 || now - lastScroll > 160) draw(now);
     if (visible && !document.hidden) raf = requestAnimationFrame(tick);
   }
+  var lastScroll = 0;
+  window.addEventListener('scroll', function () { lastScroll = performance.now(); }, { passive: true });
   function loop() { if (!raf && running) raf = requestAnimationFrame(tick); }
 
   /* drag to turn */
@@ -233,9 +256,10 @@
     if (RM) draw(performance.now());
   });
 
+  // animate only while a useful part of the globe is on screen
   new IntersectionObserver(function (es) {
-    visible = es[0].isIntersecting; loop();
-  }).observe(cv);
+    visible = es[0].isIntersecting && es[0].intersectionRatio > 0.2; loop();
+  }, { threshold: [0, 0.2, 0.5] }).observe(cv);
   document.addEventListener('visibilitychange', loop);
   window.addEventListener('resize', function () { size(); draw(performance.now()); });
 
