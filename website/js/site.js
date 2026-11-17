@@ -177,6 +177,7 @@
   /* ---------------- header, progress, scroll-linked pieces ---------------- */
   var bar = $('.bar'), prog = $('.progress span');
   var darkSecs = $$('.hero, .coverage, .statement, .licences, .foot');
+  var alwaysDark = function (s) { return s.classList.contains('statement') || s.classList.contains('foot'); };
   var navLinks = $$('.nav a');
   var lastY = W.scrollY, ticking = false;
   var st = $('.statement'), stBg = $('.statement-bg'), lws = lede ? $$('.lw', lede) : [];
@@ -191,7 +192,8 @@
     lastY = y;
     // tone under the bar
     var probe = bar.offsetHeight + 1, dark = false;
-    darkSecs.forEach(function (s) { var r = s.getBoundingClientRect(); if (r.top <= probe && r.bottom > probe) dark = true; });
+    var darkTheme = H.getAttribute('data-theme') === 'dark';
+    darkSecs.forEach(function (s) { if (!darkTheme && !alwaysDark(s)) return; var r = s.getBoundingClientRect(); if (r.top <= probe && r.bottom > probe) dark = true; });
     bar.setAttribute('data-tone', dark ? 'dark' : 'light');
     // statement: parallax + words lighting up
     if (st) {
@@ -406,6 +408,7 @@
   function saved() { try { return localStorage.getItem('lc-theme'); } catch (e) { return null; } }
   function applyTheme(t) {
     H.setAttribute('data-theme', t);
+    if (W.LCGlobe && W.LCGlobe.setTheme) W.LCGlobe.setTheme(t);
     if (themeBtn) themeBtn.setAttribute('aria-label', t === 'dark'
       ? (lang() === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to light mode')
       : (lang() === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to dark mode'));

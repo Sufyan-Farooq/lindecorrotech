@@ -11,6 +11,12 @@
   var DATA = window.LC_DATA, O = DATA.origin;
 
   var BLUE = '#1E9BFF', INK = '#111418';
+  // colours on Route Black (dark) and on pale grey (light)
+  var PAL = {
+    dark: { line: '255,255,255', dot: '203,214,226', dotA: [0.34, 0.24, 0.14, 0.06], pin: '#fff', label: 'rgba(255,255,255,0.9)', jed: BLUE, ksaFill: 0.14 },
+    light: { line: '17,20,24', dot: '17,20,24', dotA: [0.26, 0.18, 0.1, 0.045], pin: INK, label: 'rgba(17,20,24,0.88)', jed: '#0A6CC0', ksaFill: 0.12 }
+  };
+  var pal = PAL[H.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'];
   var world = window.LC_WORLD;
   var countries = topojson.feature(world, world.objects.countries).features;
   var ksa = countries.filter(function (f) { return f.id === '682'; })[0];
@@ -100,11 +106,11 @@
     // drawn here rather than with a CSS mask so the browser doesn't re-composite a mask every frame
     var fadeR = Math.min(w, h) / 2;
     ctx.beginPath(); path(sphere);
-    ctx.strokeStyle = 'rgba(255,255,255,' + (0.16 * (1 - zoom)).toFixed(3) + ')'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.strokeStyle = 'rgba(' + pal.line + ',' + (0.16 * (1 - zoom)).toFixed(3) + ')'; ctx.lineWidth = 1.2; ctx.stroke();
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, fadeR, 0, Math.PI * 2); ctx.clip();
-    ctx.beginPath(); path(graticule); ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.beginPath(); path(borders); ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.beginPath(); path(graticule); ctx.strokeStyle = 'rgba(' + pal.line + ',0.05)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); path(borders); ctx.strokeStyle = 'rgba(' + pal.line + ',0.08)'; ctx.lineWidth = 0.8; ctx.stroke();
     ctx.restore();
 
     // land dots, batched into four brightness bands by distance from the centre
@@ -121,13 +127,12 @@
       if (d2 >= 1) continue;                            // outside the round frame
       bands[d2 < 0.49 ? 0 : d2 < 0.64 ? 1 : d2 < 0.81 ? 2 : 3].rect(X - hd, Y - hd, ds, ds);
     }
-    var BA = [0.34, 0.24, 0.14, 0.06];
-    for (var b = 0; b < 4; b++) { ctx.fillStyle = 'rgba(203,214,226,' + BA[b] + ')'; ctx.fill(bands[b]); }
+    for (var b = 0; b < 4; b++) { ctx.fillStyle = 'rgba(' + pal.dot + ',' + pal.dotA[b] + ')'; ctx.fill(bands[b]); }
 
     // the Kingdom
     var intro = ease((t - 1.6) / 1.0);
     ctx.beginPath(); path(ksa);
-    ctx.fillStyle = 'rgba(30,155,255,' + (0.14 * intro).toFixed(3) + ')'; ctx.fill();
+    ctx.fillStyle = 'rgba(30,155,255,' + (pal.ksaFill * intro).toFixed(3) + ')'; ctx.fill();
     ctx.strokeStyle = 'rgba(30,155,255,' + (0.85 * intro).toFixed(3) + ')'; ctx.lineWidth = 1.4; ctx.stroke();
 
     // routes
@@ -152,7 +157,7 @@
       if (prog >= 1 && facing([r.c.lon, r.c.lat])) {
         var e = proj([r.c.lon, r.c.lat]);
         ctx.beginPath(); ctx.arc(e[0], e[1], r.c.hub ? 3.2 : 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.fillStyle = pal.pin; ctx.fill();
       }
       // trucks
       if (prog >= 1 && !RM) {
@@ -193,7 +198,7 @@
         var p = proj(ll), pos = { jed: 'w', tuu: 'w', med: 'w', ruh: 's', dmm: 'e', ahb: 'e' }[c.id] || 'e';
         var txt = c[lang];
         ctx.textAlign = pos === 'w' ? 'right' : pos === 's' ? 'center' : 'left';
-        ctx.fillStyle = c.id === 'jed' ? BLUE : 'rgba(255,255,255,0.9)';
+        ctx.fillStyle = c.id === 'jed' ? pal.jed : pal.label;
         ctx.fillText(txt, p[0] + (pos === 'w' ? -12 : pos === 's' ? 0 : 11), p[1] + (pos === 's' ? fs + 2 : 0));
       });
       ctx.globalAlpha = 1;
@@ -274,6 +279,7 @@
       running = true; loop();
     },
     setLang: function (l) { lang = l; draw(performance.now()); },
+    setTheme: function (t) { pal = PAL[t === 'dark' ? 'dark' : 'light']; draw(performance.now()); },
     // back to the whole globe, ready to dive in again
     reset: function () {
       if (RM) return;

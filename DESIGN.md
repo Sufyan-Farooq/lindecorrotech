@@ -145,8 +145,12 @@ Motion is part of the identity, not decoration. On the first visit an intro draw
 - **Secondary text**: `#A9B4C0` on ink, `#4A5562` on white. Running text is always the full ink, or `#D5DCE4` for long ledes on Route Black.
 - **Map greys** (planner map only): land `#262D37`, the Kingdom `#2B3542`, towns `#8995A3`.
 
-### Dark mode
-Follows the visitor's system setting; the header sun/moon button overrides it, and the choice is saved (picking the system's own mode goes back to following it). Only the white sections change: `--paper` `#181D24`, `--paper-2` `#20262E`, `--paper-3` `#2C343E`, text `#EEF2F6` / `#A9B4C0`, links `#4CB0FF`, the selected segment turns Sky Blue. Route Black sections, the blue ticker and the blue quote section stay as they are, so the dark/light rhythm survives in both modes.
+### Light and dark mode
+Follows the visitor's system setting; the header sun/moon button overrides it and the choice is saved (picking the system's own mode goes back to following it).
+- **Deep sections** (hero, coverage, licences) use `--d-*` tokens: pale grey `#E7EBEF` with white tiles and Route Black text in light mode; Route Black `#111418` with `#171C23` tiles and white text in dark mode. Accent text is `#0A6CC0` on light, Sky Blue on dark.
+- **Paper sections** (services, planner, steps, FAQ) are white / `#F1F3F5` in light mode and charcoal `#181D24` / `#20262E` in dark mode.
+- **Always dark:** the port-photo statement, the footer (full reversed logo across the width), the intro, the planner's output panel, the phone menu and contact bar.
+- The hero globe switches palette with the theme: dark ink dots and labels on light, pale dots and white labels on dark.
 
 ### Named Rules
 - **One accent.** Nothing else is coloured. No red, no green, no gradients.
