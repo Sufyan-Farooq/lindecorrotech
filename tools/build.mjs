@@ -180,7 +180,7 @@ writeFileSync(join(WEB, 'llms.txt'), `# Linde Corrotech International Services C
 
 - Website (English): ${SITE}/
 - Website (Arabic): ${SITE}/ar/
-- Phone and WhatsApp: +966 54 191 6494 · +966 55 728 0800 · +966 54 549 4234
+- Phone and WhatsApp: +966 54 191 6494 · +966 55 728 0630 · +966 54 549 4234
 - Email: info@lindecorrotechksa.com
 - Address: Building 8594, Prince Muteb St., Al Aziziyah, Jeddah 23342, Saudi Arabia (short address JCZB8594)
 - Transport General Authority licence: 63/00063222 (heavy freight transport of commercial goods), valid until 2029-09-15
